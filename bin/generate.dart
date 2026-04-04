@@ -5,9 +5,10 @@ import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/file_system/physical_file_system.dart';
 import 'package:build/build.dart';
-import 'package:dart_style/dart_style.dart' as dart_style;
+import 'package:dart_style/dart_style.dart';
 import 'package:envied_generator/envied_generator.dart';
 import 'package:envied_generator/src/build_options.dart';
+import 'package:path/path.dart';
 import 'package:source_gen/source_gen.dart';
 import 'package:source_gen/src/output_helpers.dart'
     show normalizeGeneratorOutput;
@@ -18,17 +19,17 @@ class _MockBuildStep extends BuildStep {
 }
 
 void main(List<String> args) async {
-  if (args.isEmpty) {
-    print('Usage: dart run envied_runner:generate <env_file> [dart_file]');
+  if (args.length < 2) {
+    print('Usage: dart run envied_runner:generate <env_file> <dart_file>');
     print('Example: dart run envied_runner:generate .env.dev lib/env/env.dart');
     exit(1);
   }
 
-  final envPath = args.first;
-  final dartFile = args.length > 1 ? args[1] : 'lib/env/env.dart';
-  final fileName = dartFile.substring(dartFile.lastIndexOf('/') + 1);
+  final envPath = args[0];
+  final dartFile = args[1];
+  final fileName = basename(dartFile);
 
-  final absolutePath = File(dartFile).absolute.path;
+  final absolutePath = normalize(File(dartFile).absolute.path);
 
   final collection = AnalysisContextCollection(
     includedPaths: [absolutePath],
@@ -78,7 +79,7 @@ void main(List<String> args) async {
     exit(1);
   }
 
-  final formatter = dart_style.DartFormatter(
+  final formatter = DartFormatter(
     languageVersion: libraryElement.languageVersion.effective,
   );
 
